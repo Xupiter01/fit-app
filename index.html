@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="description" content="Fit - แอปออกแบบ Workout Plan อัจฉริยะ เลือกระบบ Push Pull Legs พร้อมภาพประกอบ เทคนิคท่า และระบบบริหารน้ำหนัก Progressive Overload" />
+  <title>Fit - Workout Planner & Progressive Overload Tracker</title>
+  
+  <!-- Modern Thai Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Top Global Header -->
+    <header class="app-header">
+      <div class="header-container">
+        <div class="brand">
+          <div class="brand-logo">
+            <span>FIT</span>
+          </div>
+          <div class="brand-text">
+            <h1 class="brand-title">Fit</h1>
+            <span class="brand-tagline">Workout Planner & Overload</span>
+          </div>
+        </div>
+
+        <!-- Desktop Navigation Bar -->
+        <nav class="desktop-nav" aria-label="Desktop Navigation">
+          <button class="nav-btn active" data-tab="plans">
+            <span class="nav-icon">🏋️</span>
+            <span>แผนการฝึก (Plans)</span>
+          </button>
+          <button class="nav-btn" data-tab="workout">
+            <span class="nav-icon">⚡</span>
+            <span>เริ่มฝึก (Workout)</span>
+          </button>
+          <button class="nav-btn" data-tab="goals">
+            <span class="nav-icon">🎯</span>
+            <span>เป้าหมาย & บริหารน้ำหนัก</span>
+          </button>
+          <button class="nav-btn" data-tab="exercises">
+            <span class="nav-icon">📖</span>
+            <span>คลังท่า & เทคนิค</span>
+          </button>
+          <button class="nav-btn" data-tab="history">
+            <span class="nav-icon">📊</span>
+            <span>ประวัติ & สถิติ</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- In-Progress Workout Alert Banner (if draft exists) -->
+    <div id="resumeWorkoutBanner" class="resume-alert-banner hidden">
+      <div class="d-flex align-center gap-2">
+        <span class="pulse-indicator"></span>
+        <span>มีเซสชันการออกกำลังกายที่กำลังดำเนินอยู่</span>
+      </div>
+      <button id="resumeBtn" class="btn btn-sm btn-success">กลับเข้าสู่เซสชัน</button>
+    </div>
+
+    <!-- Main View Content Area -->
+    <main class="main-content">
+      <div class="content-container">
+        <!-- View 1: Plans & Splits -->
+        <section id="view-plans" class="app-view"></section>
+
+        <!-- View 2: Live Workout Session Tracker -->
+        <section id="view-workout" class="app-view hidden"></section>
+
+        <!-- View 3: Goals & Progressive Overload Engine -->
+        <section id="view-goals" class="app-view hidden"></section>
+
+        <!-- View 4: Exercises & Form Guide Library -->
+        <section id="view-exercises" class="app-view hidden"></section>
+
+        <!-- View 5: History, PRs & Analytics -->
+        <section id="view-history" class="app-view hidden"></section>
+      </div>
+    </main>
+
+    <!-- Global Exercise Detail & Motion Technique Modal -->
+    <div id="globalExerciseModal" class="modal-backdrop hidden">
+      <div class="modal-content modal-lg" id="globalExerciseModalBody"></div>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="bottom-nav" aria-label="Mobile Bottom Navigation">
+      <button class="bottom-nav-item active" data-tab="plans">
+        <span class="b-nav-icon">🏋️</span>
+        <span class="b-nav-label">แผนฝึก</span>
+      </button>
+      <button class="bottom-nav-item" data-tab="workout">
+        <span class="b-nav-icon">⚡</span>
+        <span class="b-nav-label">ออกกำลัง</span>
+      </button>
+      <button class="bottom-nav-item" data-tab="goals">
+        <span class="b-nav-icon">🎯</span>
+        <span class="b-nav-label">เป้าหมาย</span>
+      </button>
+      <button class="bottom-nav-item" data-tab="exercises">
+        <span class="b-nav-icon">📖</span>
+        <span class="b-nav-label">ท่าฝึก</span>
+      </button>
+      <button class="bottom-nav-item" data-tab="history">
+        <span class="b-nav-icon">📊</span>
+        <span class="b-nav-label">ประวัติ</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Application Universal Scripts -->
+  <script src="js/bundle.js"></script>
+</body>
+</html>

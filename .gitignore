@@ -1,0 +1,14 @@
+# Freebuff internal (ไม่ควรอัปโหลดขึ้น GitHub)
+.freebuff/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
+.vscode/
+
+# Logs & temp
+*.log
+npm-debug.log*
