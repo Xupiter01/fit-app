@@ -3604,3 +3604,909 @@ button {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 320px);
   }
 }
+
+/* ==========================================================================
+   MOBILE · MINIMAL APPLE LAYER
+   เรียบง่าย โปร่งแสงแบบ iOS ตัวหนังสือไม่ล้นกรอบ และมีแอนิเมชันแบบสปริง
+   - โทนสีนิ่งลง เหลือสีเน้นเพียงจุดเดียว
+   - ตัวอักษรไม่ล้น: min-width:0 + overflow-wrap + clamp + balance
+   - เอฟเฟกต์: translucency, กดแบบ scale นุ่ม, ขอบมนกลมแบบ continuous
+   ========================================================================== */
+
+@media (max-width: 767px) {
+
+  /* --- 0. ทรัพยากรสี/ฟอนต์สไตล์สำหรับมือถือ --- */
+  :root {
+    /* ฟอนต์: ให้ iOS ใช้ SF Pro ก่อน แล้วค่อย Kanit สำหรับภาษาไทย */
+    --font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
+                   'Helvetica Neue', 'Kanit', system-ui, sans-serif;
+
+    /* โทนขาว-ดำ-เทาล้วน: สีเน้นกลายเป็นขาวล้วน */
+    --primary: #ffffff;
+    --accent-blue: #ffffff;
+    --accent-purple: #ffffff;
+    --accent-amber: #ffffff;
+    --accent-rose: #ffffff;
+    --primary-hover: #e5e5ea;
+    --primary-glow: rgba(255, 255, 255, 0.16);
+
+    /* พื้นหลังดำสนิทแบบ OLED + เส้นขอบบางลง ให้ดูเรียบ */
+    --bg-main: #000000;
+    --bg-card: rgba(255, 255, 255, 0.055);
+    --bg-card-sub: rgba(255, 255, 255, 0.09);
+    --bg-elevated: rgba(255, 255, 255, 0.07);
+    --border-color: rgba(255, 255, 255, 0.10);
+    --border-light: rgba(255, 255, 255, 0.18);
+
+    --text-main: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.60);
+    --text-dim: rgba(255, 255, 255, 0.36);
+
+    /* มุมโค้งใหญ่แบบ iOS */
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 22px;
+
+    /* เงาอ่อนแบบ iOS ซ้อนชั้น ไม่ดำสนิท */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.7);
+
+    /* ฟีลแอนิเมชันแบบสปริงของ iOS */
+    --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+    --dur-fast: 0.18s;
+
+    --dock-h: 62px;
+
+    /* สีตายตัวที่หลุดจากตัวแปร ใช้ระบายทิ้งให้เป็นเทาบนมือถือ */
+    --mono-ink: #000000;
+    --mono-fill: rgba(255, 255, 255, 0.08);
+    --mono-line: rgba(255, 255, 255, 0.14);
+  }
+
+  body {
+    /* ดำสนิท ไม่มีเนื้อหนูเชียวคลุม */
+    background: var(--bg-main);
+    color: var(--text-main);
+    /* เว้นที่ท้ายให้ dock ลอยแบบไม่ทับเนื้อหา */
+    padding-bottom: calc(var(--dock-h) + env(safe-area-inset-bottom, 0px) + 26px);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ลิงก์ให้เป็นขาว มีเส้นใต้บาง ๆ แทนสีฟ้า */
+  a {
+    color: var(--text-main);
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.3);
+    text-underline-offset: 2px;
+  }
+
+  /* ป้องกันข้อความล้นกรอบทุกกรณี (คำยาว/URL/ตัวเลขไม่มีช่องว่าง) */
+  h1, h2, h3, h4, h5, h6, p, span, div, a, button, label, td, th, li {
+    overflow-wrap: break-word;
+  }
+
+  /* --- 1. กั้น flex/grid ไม่ให้ลูกย่อจนข้อความล้น --- */
+  .view-header > *,
+  .card-header > *,
+  .plan-day-card > *,
+  .goal-card > *,
+  .exercise-card-header > *,
+  .banner-stats > *,
+  .history-stats-grid > *,
+  .summary-stats-grid > *,
+  .goal-banner-info,
+  .empty-workout-state > * {
+    min-width: 0;
+  }
+
+  .view-header,
+  .card-header,
+  .exercise-card-header,
+  .active-goal-banner,
+  .plan-day-card,
+  .goal-card {
+    gap: 0.75rem;
+  }
+
+  /* --- 2. หัวเรื่อง: เล็กลง ไม่ล้นบรรทัด --- */
+  .view-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.2px;
+    /* หัวเรื่องยาวให้ตัดบรรทัดสวย ๆ แทนที่จะล้นลงไปหลายบรรทัด */
+    text-wrap: balance;
+  }
+
+  .view-subtitle {
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+    text-wrap: pretty;
+  }
+
+  .section-title {
+    font-size: 0.98rem;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+    margin-bottom: 0.65rem;
+  }
+
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: -0.1px;
+    text-wrap: balance;
+  }
+
+  .card-subtitle,
+  .tab-note {
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--text-muted);
+    text-wrap: pretty;
+  }
+
+  .banner-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.2px;
+    text-wrap: balance;
+    margin: 0.2rem 0;
+  }
+
+  .banner-desc {
+    font-size: 0.82rem;
+    line-height: 1.55;
+    text-wrap: pretty;
+  }
+
+  /* --- 3. Header แบบ iOS: โปร่งแสง บาง สูงไม่เกินจำเป็น --- */
+  .app-header {
+    background: rgba(10, 12, 20, 0.72);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    /* เส้นขอบละเอียดแบบ iOS */
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03);
+  }
+
+  .header-container {
+    padding: 0.5rem 1rem;
+    min-height: 48px;
+  }
+
+  .brand {
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .brand-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    background: #ffffff;
+    color: #000000;
+    box-shadow: 0 2px 12px rgba(255, 255, 255, 0.2);
+  }
+
+  .brand-text {
+    min-width: 0;
+  }
+
+  .brand-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+  }
+
+  /* ตัดคำโปรโมตออกเพื่อความเรียบง่ายบนมือถือ */
+  .brand-tagline {
+    display: none;
+  }
+
+  .content-container {
+    padding: 1rem 1rem 1.5rem !important;
+    max-width: 100%;
+  }
+
+  /* --- 4. Dock ลอยแบบ iOS (floating, มุมโค้ง, โปร่งแสง) --- */
+  .bottom-nav {
+    left: 10px;
+    right: 10px;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    padding: 6px;
+    gap: 2px;
+    justify-content: space-between;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(16, 19, 28, 0.72);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    backdrop-filter: saturate(180%) blur(24px);
+    box-shadow:
+      0 10px 34px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+  }
+
+  .bottom-nav-item {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 50px;
+    padding: 0.4rem 0.15rem;
+    gap: 0.15rem;
+    border-radius: 18px;
+    color: var(--text-muted);
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color var(--dur-fast) var(--ease-spring),
+      transform var(--dur-fast) var(--ease-spring);
+  }
+
+  /* กดแล้วยุบเล็กนิดแบบ iOS */
+  .bottom-nav-item:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .bottom-nav-item .b-nav-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+    /* ไอคอนที่ไม่ได้เลือก จางลงเพื่อความเรียบ */
+    opacity: 0.55;
+    filter: saturate(0.6);
+    transition: opacity var(--dur-fast) var(--ease-spring),
+                transform var(--dur-fast) var(--ease-spring);
+  }
+
+  .bottom-nav-item .b-nav-label {
+    font-size: 0.62rem;
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.1px;
+    /* กันป้ายยาวล้น */
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bottom-nav-item.active {
+    color: var(--primary);
+    background: rgba(255, 255, 255, 0.07);
+  }
+
+  .bottom-nav-item.active .b-nav-icon {
+    opacity: 1;
+    filter: none;
+    transform: translateY(-1px);
+  }
+
+  .bottom-nav-item.active .b-nav-label {
+    font-weight: 600;
+  }
+
+  /* --- 5. การ์ด: บาง เรียบ มีมิติ ไม่หนัก --- */
+  .card,
+  .plan-day-card,
+  .goal-card,
+  .exercise-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    padding: 0.95rem !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    transition: transform var(--dur-fast) var(--ease-spring),
+                box-shadow var(--dur-fast) var(--ease-spring);
+  }
+
+  .card:active,
+  .plan-day-card:active,
+  .goal-card:active {
+    transform: scale(0.985);
+  }
+
+  /* การ์ดเป้าหมาย: เลิกบีบชื่อให้ล้นหลายบรรทัด */
+  .active-goal-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+    padding: 1.1rem;
+    background: linear-gradient(150deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.03) 60%);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 22px;
+  }
+
+  .goal-banner-icon {
+    font-size: 2.25rem;
+  }
+
+  .goal-banner-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* สถิติ: 2 คอลัมน์ให้เลขไม่ล้น */
+  .banner-stats,
+  .history-stats-grid,
+  .summary-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.5rem;
+  }
+
+  .stat-box {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 0.6rem 0.7rem;
+    min-width: 0;
+  }
+
+  .stat-label {
+    font-size: 0.66rem;
+    line-height: 1.3;
+  }
+
+  .stat-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    /* ตัวเลขยาวห้ามดันกรอบ */
+    overflow-wrap: anywhere;
+  }
+
+  /* --- 6. ปุ่ม: นิ่งขึ้น และกดแบบ iOS --- */
+  .btn {
+    min-height: 46px;
+    padding: 0.65rem 1rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+    border-radius: 14px;
+    max-width: 100%;
+    /* ข้อความยาวในปุ่มต้องตัด/ขึ้นบรรทัดใหม่ ไม่ล้นกรอบ */
+    overflow-wrap: break-word;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--dur-fast) var(--ease-spring),
+                opacity var(--dur-fast) var(--ease-spring);
+  }
+
+  .btn:active {
+    transform: scale(0.96);
+    opacity: 0.85;
+  }
+
+  .btn-sm { min-height: 38px; padding: 0.45rem 0.8rem; font-size: 0.85rem; }
+  .btn-xs { min-height: 34px; padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+  .btn-lg { min-height: 52px; font-size: 1rem; }
+
+  /* ปุ่มหลัก: พื้นขาว ตัวดำ แบบ iOS */
+  .btn-primary {
+    background: #ffffff;
+    color: #000000;
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.18);
+  }
+
+  .btn-primary:active {
+    box-shadow: 0 1px 6px rgba(255, 255, 255, 0.12);
+  }
+
+  .btn-success {
+    background: #ffffff;
+    color: #000000;
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.18);
+  }
+
+  /* --- 7. ช่องกรอก: กรอบบาง มุมโค้ง --- */
+  .form-control,
+  .form-control-sm,
+  .search-input {
+    min-height: 46px;
+    padding: 0.6rem 0.8rem;
+    font-size: 1rem; /* กัน iOS auto-zoom */
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    transition: border-color var(--dur-fast) var(--ease-spring),
+                background-color var(--dur-fast) var(--ease-spring);
+  }
+
+  .form-control:focus,
+  .search-input:focus {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.55);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+  }
+
+  .search-input-wrapper {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+  }
+
+  .form-group label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+  }
+
+  /* --- 8. แถบเลื่อนแนวนอน: snap + ขอบมัวเฟดบอกว่ายังมีต่อ --- */
+  .plan-tabs-bar,
+  .category-tabs,
+  .btn-group-xs {
+    /* เต็มจอและมีขอบมัวเฟดด้านขวา */
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    gap: 0.5rem;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 1rem;
+  }
+
+  .plan-tabs-bar {
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 88%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 0, #000 88%, transparent 100%);
+  }
+
+  .plan-tab-item {
+    /* ไม่กินจอเต็ม เหลือให้เห็นตัวถัดไป */
+    min-width: 0;
+    max-width: 74%;
+    padding: 0.6rem 0.85rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--dur-fast) var(--ease-spring),
+                background-color var(--dur-fast) var(--ease-spring);
+  }
+
+  .plan-tab-item:active { transform: scale(0.97); }
+
+  .plan-tab-item.active {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.5);
+    /* ตัดเรืองของแสงให้ดูเบาลง */
+    box-shadow: none;
+  }
+
+  .plan-tab-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    /* ชื่อยาวต้องตัด ไม่ล้น */
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .plan-tab-badge {
+    font-size: 0.68rem;
+    color: var(--primary);
+    margin-top: 0.15rem;
+  }
+
+  /* ปุ่มเม็ดกรอง */
+  .cat-pill {
+    padding: 0.4rem 0.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: var(--radius-full);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--dur-fast) var(--ease-spring),
+                background-color var(--dur-fast) var(--ease-spring);
+  }
+
+  .cat-pill:active { transform: scale(0.95); }
+
+  .cat-pill.active {
+    background: #ffffff;
+    color: #000000;
+    border-color: #ffffff;
+    font-weight: 600;
+  }
+
+  /* --- 9. โมดัล: กึ่งโปร่งแสง มุมโค้งใหญ่ --- */
+  .modal-backdrop {
+    padding: 0.6rem;
+    background: rgba(0, 0, 0, 0.55);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  .modal-content {
+    max-height: 86vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1.1rem !important;
+    border-radius: 24px;
+    background: rgba(18, 21, 30, 0.92);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    backdrop-filter: saturate(180%) blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .modal-title {
+    font-size: 1.02rem;
+    line-height: 1.35;
+    text-wrap: balance;
+  }
+
+  .modal-close-btn {
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+    min-width: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    flex: 0 0 auto;
+  }
+
+  .modal-tabs {
+    gap: 0.4rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .modal-tabs::-webkit-scrollbar { display: none; }
+
+  .modal-tab-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    border-radius: 10px;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.82rem;
+  }
+
+  /* --- 10. สถิติ/ตัวเลขใหญ่: บางและเบา --- */
+  .metric-pill {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.35rem 0.3rem;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+  }
+
+  .metric-label {
+    font-size: 0.58rem;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+  }
+
+  .metric-val {
+    font-size: 0.82rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  /* --- 11. แถบเครื่องมือระหว่างเซ็ต --- */
+  .quick-log-bar {
+    top: calc(var(--app-header-h, 0px) + 0.5rem);
+    padding: 0.5rem 0.6rem;
+    border-radius: 18px;
+    background: rgba(18, 21, 30, 0.82);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: var(--shadow-md);
+  }
+
+  .quick-repeat-btn,
+  .set-check-btn,
+  .set-copy-btn,
+  .step-btn {
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    font-size: 0.85rem;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--dur-fast) var(--ease-spring);
+  }
+
+  .quick-repeat-btn:active,
+  .set-check-btn:active,
+  .set-copy-btn:active,
+  .step-btn:active {
+    transform: scale(0.93);
+  }
+
+  .step-btn {
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .set-check-btn {
+    background: #ffffff;
+    border-color: #ffffff;
+    color: #000000;
+    font-weight: 600;
+  }
+
+  /* --- 12. สถานะว่าง: เรียบและสงบ --- */
+  .empty-workout-state {
+    padding: 2rem 1rem;
+  }
+
+  .empty-workout-state h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+    text-wrap: balance;
+  }
+
+  .empty-workout-state p {
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+
+  /* --- 13. แบนเนอร์เรียบ ๆ --- */
+  .resume-alert-banner {
+    padding: 0.6rem 1rem;
+    font-size: 0.82rem;
+    background: rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  .resume-alert-banner .pulse-indicator {
+    background: #ffffff;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6); }
+    70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+  }
+
+  /* --- 14. ตาราง -> การ์ดแนวตั้ง ย่อให้สั้น --- */
+  table {
+    font-size: 0.8rem;
+    width: 100%;
+  }
+
+  th, td {
+    padding: 0.5rem 0.45rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    overflow-wrap: break-word;
+  }
+
+  /* --- 15. เคารพการตั้งค่าลดการเคลื่อนไหวของ iOS --- */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* --- 16. เก็บรายละเอียดเสียงดังให้ดูนิ่งลง (บางอย่าง JS เขียน style inline ต้องใช้ !important) --- */
+@media (max-width: 767px) {
+
+  /* เส้นสีด้านบนการ์ดวันฝึก (JS เขียนสีไว้ inline) -> บางลงและกลายเป็นเทาบนโทนขาวดำ */
+  .quick-start-card {
+    border-top-width: 2px !important;
+    border-top-style: solid !important;
+    border-top-color: rgba(255, 255, 255, 0.30) !important;
+    border-radius: 18px;
+  }
+
+  /* การ์ดเป้าหมายที่เลือกอยู่: วงแหวนขาวบางแทนเส้นหนา */
+  .goal-card.selected {
+    border-color: rgba(255, 255, 255, 0.45) !important;
+    background: rgba(255, 255, 255, 0.10) !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14) !important;
+  }
+
+  /* แถบหมวดหมู่/ตัวกรอง: ขอบมัวเฟดด้านขวาเหมือนแถบแผน */
+  .category-tabs,
+  .btn-group-xs {
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 86%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 0, #000 86%, transparent 100%);
+  }
+
+  /* ปุ่มหลัก: ขาวล้วน */
+  .btn-primary,
+  .btn-success {
+    background: #ffffff;
+    color: #000000;
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.16);
+  }
+
+  /* ภาพตัวอย่างท่า: ขาวดำเทาให้เข้ากับโทน */
+  .exercise-card-thumb-wrapper img,
+  .day-ex-thumb img {
+    filter: grayscale(1) contrast(1.04);
+  }
+
+  /* ตาราง: ให้เลื่อนแนวนอนได้ แทนที่จะบีบหัวคอลัมน์จนข้อความแตกเป็น 3 บรรทัด */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-inline: -0.35rem;
+    padding-inline: 0.35rem;
+    /* ซ่อนแถบเลื่อนให้ดูเบา เหลือขอบมัวเฟดเป็นตัวบอกทาง */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 92%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 0, #000 92%, transparent 100%);
+  }
+
+  .table-responsive::-webkit-scrollbar {
+    display: none;
+  }
+
+  .table-responsive table {
+    min-width: 440px;
+  }
+
+  /* หัวตารางอ่านบรรทัดเดียว ไม่ให้คำแตกลงหลายบรรทัด */
+  .table-responsive th {
+    white-space: nowrap;
+    font-size: 0.74rem;
+    letter-spacing: -0.1px;
+  }
+
+  .table-responsive td {
+    font-size: 0.78rem;
+  }
+
+  /* --- 16b. ระบายสีที่ฝังตายตัว (hardcode hex ในแต่ละ selector) ให้เป็นเทา --- */
+  /* ป้ายหมวดหมู่ท่า / ป้ายสำเร็จ / ชิปน้ำหนัก */
+  .badge-cat,
+  .badge-success,
+  .ex-weight-chip,
+  .goal-rule-box .badge,
+  .tile-badge {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  }
+
+  /* ข้อความสถานะ/ตัวเลขที่เคยใช้สีฟ้า-ม่วง-เขียว */
+  .text-info,
+  .text-accent,
+  .text-success,
+  .sync-delta,
+  .sync-delta.fresh,
+  .sync-delta.stale,
+  .plan-frequency-text,
+  .tab-note strong {
+    color: #ffffff !important;
+  }
+
+  /* เส้นขอบสีบนการ์ดวันฝึก (แยกสีตามวันในโค้ดเดิม) */
+  .plan-day-card {
+    border-color: rgba(255, 255, 255, 0.10) !important;
+  }
+
+  .plan-day-card::before,
+  .plan-day-card::after {
+    background: transparent !important;
+  }
+
+  /* ปุ่มลบ/อันตราย -> เทาอ่อน */
+  .btn-outline-danger {
+    color: rgba(255, 255, 255, 0.7) !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+    background: transparent !important;
+  }
+
+  .btn-outline-danger:hover,
+  .btn-outline-danger:active {
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+  }
+
+  /* พื้นหลังรูปย่อท่าออกกำลังกาย */
+  .day-ex-thumb,
+  .exercise-card-thumb-wrapper {
+    background: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  /* กริฟ/แท่งสถิติที่เคยมีสี */
+  .chart-bar,
+  .progress-fill,
+  .weight-bar-fill {
+    background: #ffffff !important;
+  }
+
+  /* เส้นใต้ตาราง (เฉพาะกฎที่ระบุสีน้ำเงินไว้ตรง ๆ) */
+  .table-sync td,
+  .table-sync th,
+  .table-sets td,
+  .table-sets th,
+  .table-prs td,
+  .table-prs th,
+  .table-warmup td,
+  .table-warmup th {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  /* Translucent colour chips: drain remaining tints to neutral grey.
+     NOTE: colour overrides only - never touch padding/size/typography here. */
+  .source-tag,
+  .sync-delta,
+  .pr-weight-badge,
+  .badge-highlight,
+  .selected-pill {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
+  }
+
+  /* Containers: background only, keep their inner text hierarchy intact */
+  .goal-rule-box,
+  .sync-row.is-anchor {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+  }
+}
+
+/* --- 17. จอเล็กมาก (iPhone SE / จอแคบ) --- */
+@media (max-width: 380px) {
+  :root { --dock-h: 58px; }
+
+  .view-title { font-size: 1.05rem; }
+  .banner-title { font-size: 1.05rem; }
+  .card-title { font-size: 0.9rem; }
+
+  .content-container {
+    padding: 0.85rem 0.8rem 1.5rem !important;
+  }
+
+  .plan-tabs-bar,
+  .category-tabs,
+  .btn-group-xs {
+    margin-inline: -0.8rem;
+    padding-inline: 0.8rem;
+    scroll-padding-inline: 0.8rem;
+  }
+
+  .bottom-nav {
+    left: 7px;
+    right: 7px;
+    padding: 5px;
+    border-radius: 22px;
+  }
+
+  .bottom-nav-item {
+    min-height: 46px;
+  }
+
+  .bottom-nav-item .b-nav-icon { font-size: 1.1rem; }
+  .bottom-nav-item .b-nav-label { font-size: 0.58rem; }
+
+  .btn {
+    min-height: 44px;
+    font-size: 0.88rem;
+    padding: 0.6rem 0.85rem;
+  }
+
+  .banner-stats,
+  .history-stats-grid,
+  .summary-stats-grid {
+    gap: 0.4rem;
+  }
+}
